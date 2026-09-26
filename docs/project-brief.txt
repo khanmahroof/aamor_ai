@@ -1,0 +1,752 @@
+You are a senior full-stack engineer. Build a production-quality AI chat web application inspired by modern AI assistants such as ChatGPT.
+
+IMPORTANT GOAL:
+I am a student building this project with a budget of ₹0 for development. Design the application so it can run completely locally without requiring a paid AI API.
+
+Do NOT copy ChatGPT/OpenAI branding, logos, proprietary UI assets, or trademarks. Create an original professional AI assistant interface.
+
+# 1. TECH STACK
+
+Frontend:
+- Next.js with App Router
+- React
+- TypeScript
+- Tailwind CSS
+- Responsive mobile + desktop design
+
+Backend:
+- Next.js Route Handlers/API routes
+- TypeScript
+
+Database:
+- Prisma ORM
+- SQLite for local development
+- Architecture must make migration to PostgreSQL easy later
+
+Authentication:
+- Auth.js / NextAuth
+- Credentials/email-password authentication
+- Google OAuth should be optional
+- Secure password hashing
+- Protected routes
+- Session persistence
+
+AI architecture:
+Create a provider abstraction.
+
+Supported providers:
+
+1. Ollama — DEFAULT local/free provider
+2. OpenAI — optional
+3. Anthropic — optional
+
+The application must work without OpenAI or Anthropic API keys when Ollama is selected.
+
+Never expose AI API keys to the browser.
+
+Use environment variables for all secrets.
+
+# 2. APPLICATION UI
+
+Create a polished, original AI assistant interface.
+
+Desktop layout:
+
+LEFT SIDEBAR
+- New Chat button
+- Search conversations
+- Conversation history
+- Rename conversation
+- Delete conversation
+- User/settings section
+- Collapsible sidebar
+
+TOP BAR
+- Current conversation title
+- AI model selector
+- Theme controls
+
+MAIN CHAT
+- User messages
+- Assistant messages
+- Markdown rendering
+- Tables
+- Lists
+- Links
+- Blockquotes
+- Code blocks
+- Syntax highlighting
+- Copy code button
+- Copy message button
+
+INPUT AREA
+- Auto-expanding textarea
+- Send button
+- Attachment button
+- Stop generation button while AI is responding
+
+Keyboard behavior:
+Enter = send
+Shift+Enter = new line
+
+The UI must work properly on:
+- desktop
+- laptop
+- tablet
+- mobile
+
+Add dark mode and light mode.
+
+# 3. DATABASE
+
+Create a proper Prisma schema.
+
+Required models:
+
+User
+Account
+Session
+Conversation
+Message
+Attachment
+UserSettings
+UsageRecord
+
+User:
+- id
+- name
+- email
+- passwordHash
+- image
+- createdAt
+- updatedAt
+
+Conversation:
+- id
+- userId
+- title
+- selectedModel
+- createdAt
+- updatedAt
+
+Message:
+- id
+- conversationId
+- role
+- content
+- createdAt
+
+Supported roles:
+- user
+- assistant
+- system
+
+Attachment:
+- id
+- messageId
+- filename
+- mimeType
+- size
+- storagePath
+- createdAt
+
+UserSettings:
+- userId
+- systemPrompt
+- preferredModel
+- theme
+- temperature
+
+UsageRecord:
+- id
+- userId
+- conversationId
+- model
+- inputTokens
+- outputTokens
+- totalTokens
+- createdAt
+
+Create proper relationships, indexes and cascade behavior.
+
+Users must NEVER be able to access another user's conversations or files.
+
+# 4. CHAT API
+
+Create:
+
+POST /api/chat
+
+Request:
+
+{
+  conversationId,
+  messages,
+  model,
+  attachments
+}
+
+Requirements:
+
+- Verify authentication
+- Validate input
+- Validate conversation ownership
+- Apply rate limiting
+- Select correct AI provider
+- Send request to AI model
+- Stream assistant response
+- Save user message
+- Save completed assistant response
+- Record usage when available
+- Handle client cancellation
+- Handle provider errors
+- Handle timeouts
+
+Use fetch streaming or Server-Sent Events.
+
+The frontend must display tokens/chunks as they arrive instead of waiting for the complete response.
+
+# 5. AI PROVIDER SYSTEM
+
+Create an abstraction similar to:
+
+AIProvider
+  generate()
+  stream()
+  listModels()
+
+Implement:
+
+OllamaProvider
+OpenAIProvider
+AnthropicProvider
+
+Do not tightly couple the application to one AI company.
+
+Environment configuration should determine which providers are available.
+
+Example:
+
+AI_DEFAULT_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+
+If a provider does not have the required configuration, hide or disable its models instead of crashing.
+
+# 6. MODEL SELECTOR
+
+Create a model selector.
+
+For Ollama:
+Retrieve available locally installed models when possible.
+
+Cloud models should only appear when the corresponding provider is configured.
+
+Store the user's preferred model.
+
+Store the model used for each conversation/message where useful.
+
+# 7. CHAT MANAGEMENT
+
+Users must be able to:
+
+- Create chat
+- Continue previous chat
+- Rename chat
+- Delete chat
+- Search chat history
+- Automatically generate a short conversation title
+- Switch between conversations
+
+Sort conversations by latest activity.
+
+Never mix messages between conversations.
+
+# 8. STREAMING
+
+Implement real streaming.
+
+Flow:
+
+User submits message
+→ save user message
+→ call selected model
+→ begin stream
+→ render chunks immediately
+→ user can press Stop
+→ AbortController cancels generation
+→ save final partial/full assistant response appropriately
+
+Handle:
+- disconnects
+- cancellation
+- model errors
+- timeout
+- empty response
+
+Do not fake streaming with timers.
+
+# 9. REGENERATE RESPONSE
+
+Add Regenerate button.
+
+When clicked:
+
+- identify previous user message
+- remove/replace the appropriate assistant response
+- call model again
+- stream regenerated answer
+- save new response
+
+Do not duplicate the user's message unnecessarily.
+
+# 10. EDIT AND RETRY
+
+Allow users to edit one of their previous messages.
+
+After editing:
+- regenerate the conversation from that point
+- safely handle later messages
+
+Design this so conversation branching can be added later.
+
+# 11. FILE UPLOAD
+
+Support:
+
+Images:
+- PNG
+- JPG
+- JPEG
+- WEBP
+
+Documents:
+- PDF
+- TXT
+- Markdown
+
+Requirements:
+- validate MIME type
+- validate extension
+- enforce maximum file size
+- sanitize filenames
+- prevent path traversal
+- generate unique server-side filenames
+- store attachment metadata
+- ensure users can only access their own attachments
+
+For PDFs:
+Extract text locally and use relevant extracted text as context.
+
+Do not send the entire document blindly if it exceeds the model context limit.
+
+For images:
+Only send them to models/providers that support vision.
+
+Show attachment previews in the UI.
+
+# 12. CONTEXT MANAGEMENT
+
+Do NOT send unlimited conversation history.
+
+Implement a context manager.
+
+It should:
+- estimate token usage
+- keep the most relevant/recent messages
+- respect model context limits
+- preserve system instructions
+- truncate safely when required
+
+Design the architecture so summarization of old conversation history can be added later.
+
+# 13. CUSTOM INSTRUCTIONS
+
+Create Settings.
+
+Allow users to configure:
+- custom system prompt
+- preferred AI provider
+- preferred model
+- temperature
+- theme
+
+Store settings per user.
+
+Never allow another user's settings to be accessed.
+
+# 14. SECURITY
+
+Security is extremely important.
+
+Implement:
+
+- Authentication checks
+- Authorization/ownership checks
+- Server-side validation
+- Zod validation
+- Rate limiting
+- Secure password hashing
+- Secure session configuration
+- Environment variables
+- Upload validation
+- Filename sanitization
+- File-size limits
+- Request-size limits
+- Safe error messages
+- Basic security headers
+
+Never:
+- expose API keys
+- trust userId supplied by frontend
+- store plaintext passwords
+- execute uploaded files
+- expose internal stack traces in production
+- directly render untrusted HTML returned by the model
+
+Sanitize rendered Markdown/HTML appropriately to reduce XSS risk.
+
+# 15. RATE LIMITING
+
+Implement per-user rate limiting.
+
+For example:
+- requests per minute
+- concurrent generation limit
+
+Make limits configurable using environment variables.
+
+Return proper HTTP 429 responses.
+
+# 16. ERROR HANDLING
+
+Create user-friendly states for:
+
+- model offline
+- Ollama unavailable
+- invalid model
+- provider API error
+- rate limit reached
+- upload rejected
+- authentication expired
+- network failure
+- stream interrupted
+- server timeout
+
+Provide Retry where appropriate.
+
+Do not expose sensitive backend information.
+
+# 17. TOKEN / USAGE TRACKING
+
+Display optional usage information:
+
+- input tokens
+- output tokens
+- total tokens
+- model
+- provider
+
+When exact token information is unavailable, clearly mark values as estimated instead of pretending they are exact.
+
+Add a simple usage page showing:
+- total conversations
+- total messages
+- usage by model
+- recent activity
+
+Do NOT invent monetary costs when using local models.
+
+# 18. SEARCH
+
+Implement conversation search.
+
+Search:
+- conversation titles
+- message content
+
+Start with SQLite-compatible search.
+
+Keep the architecture ready for PostgreSQL full-text search later.
+
+# 19. UX DETAILS
+
+Include:
+
+- loading states
+- skeleton states where useful
+- toast notifications
+- empty chat screen
+- welcome screen
+- keyboard shortcuts
+- accessible buttons
+- ARIA labels
+- focus states
+- responsive sidebar
+- auto-scroll during generation
+- manual-scroll detection so the app does not constantly force the user to the bottom
+- confirmation before deleting chats
+
+# 20. CODE QUALITY
+
+Use:
+- TypeScript strict mode
+- reusable components
+- clean architecture
+- clear naming
+- server/client component separation
+- centralized validation
+- centralized error handling
+
+Avoid:
+- huge single files
+- duplicated code
+- unnecessary dependencies
+- hardcoded secrets
+- hardcoded absolute paths
+
+# 21. TESTING
+
+Add basic automated tests for:
+
+- authentication protection
+- conversation ownership
+- chat API validation
+- AI provider abstraction
+- conversation creation
+- message saving
+- rate limiting
+
+Also provide instructions for running tests.
+
+# 22. ENVIRONMENT VARIABLES
+
+Create:
+
+.env.example
+
+Include variables such as:
+
+DATABASE_URL=
+AUTH_SECRET=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+AI_DEFAULT_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+
+CHAT_RATE_LIMIT=
+MAX_UPLOAD_SIZE_MB=
+
+Do not place real credentials in this file.
+
+# 23. PROJECT STRUCTURE
+
+Use a clean structure similar to:
+
+app/
+  api/
+  chat/
+  login/
+  register/
+  settings/
+  usage/
+
+components/
+  chat/
+  sidebar/
+  ui/
+
+lib/
+  ai/
+    providers/
+    context/
+  auth/
+  db/
+  validation/
+  rate-limit/
+  files/
+
+prisma/
+
+public/
+
+tests/
+
+# 24. README
+
+Create a complete README.md explaining:
+
+Prerequisites
+Installation
+Environment setup
+Database setup
+Prisma migration
+Running Ollama
+Downloading a local model
+Running the development server
+Running tests
+Optional OpenAI configuration
+Optional Anthropic configuration
+Production deployment considerations
+Troubleshooting
+
+A beginner should be able to follow the README.
+
+# 25. ZERO-COST LOCAL DEVELOPMENT
+
+The complete core application must work locally without paid services.
+
+Preferred local setup:
+
+Next.js
++
+SQLite
++
+Prisma
++
+Ollama
++
+Local AI model
+
+Google OAuth is optional because credentials/configuration may not be available.
+
+Credentials-based local login must work without Google OAuth.
+
+Cloud AI providers are optional enhancements.
+
+# 26. FUTURE-READY ARCHITECTURE
+
+Design the code so these features can be added later without rewriting the whole project:
+
+- PostgreSQL
+- Redis
+- RAG
+- vector database
+- web search
+- voice input
+- text-to-speech
+- conversation branching
+- message feedback
+- image generation
+- AI agents/tools
+- admin dashboard
+- subscription plans
+- cloud file storage
+- mobile application
+
+Do NOT implement all of these now.
+
+Keep interfaces/modules extensible.
+
+# 27. IMPLEMENTATION ORDER
+
+Do NOT attempt everything in one giant step.
+
+Build in this order:
+
+PHASE 1
+Project initialization and folder structure.
+
+PHASE 2
+Prisma schema + SQLite database.
+
+PHASE 3
+Authentication.
+
+PHASE 4
+AI provider abstraction + Ollama integration.
+
+PHASE 5
+/api/chat with real streaming.
+
+PHASE 6
+Basic Chat UI.
+
+PHASE 7
+Conversation history and sidebar.
+
+PHASE 8
+Markdown/code rendering.
+
+PHASE 9
+Stop/regenerate/edit functionality.
+
+PHASE 10
+File uploads and PDF/image handling.
+
+PHASE 11
+Settings and custom instructions.
+
+PHASE 12
+Usage tracking and rate limiting.
+
+PHASE 13
+Security review.
+
+PHASE 14
+Tests.
+
+PHASE 15
+UI/UX polish and README.
+
+After each phase:
+1. Explain what was created.
+2. List files created or modified.
+3. Run relevant lint/type/test commands.
+4. Fix errors before continuing.
+5. Do not leave placeholder code where working code can reasonably be implemented.
+
+# 28. IMPORTANT DEVELOPMENT RULES
+
+Do not only explain the solution.
+
+Actually create the files and implement the code.
+
+Before installing a dependency, verify that it is actually needed.
+
+Use current stable package versions compatible with the project.
+
+Do not silently change the technology stack.
+
+Do not delete working code unnecessarily.
+
+When an error occurs:
+1. inspect the actual error,
+2. identify its root cause,
+3. fix it,
+4. rerun the relevant command.
+
+Never expose secrets in:
+- source code
+- browser JavaScript
+- logs
+- Git commits
+
+Create a proper .gitignore before any secrets are added.
+
+# FINAL TARGET
+
+When finished, I should be able to run approximately:
+
+npm install
+
+cp .env.example .env
+
+npx prisma migrate dev
+
+ollama serve
+
+npm run dev
+
+Then open the local application, create an account, start a conversation, choose a locally installed Ollama model, receive streamed AI responses, stop/regenerate messages, upload supported files, close the browser, reopen it, log back in and still see my conversation history.
+
+Start with PHASE 1.
+
+Do not jump directly to later phases.
