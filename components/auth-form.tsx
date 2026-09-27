@@ -61,7 +61,7 @@ export function AuthForm({
         <h1>{register ? "Make room for your ideas." : "Welcome back."}</h1>
         <p className="muted">
           {register
-            ? "Create your local account to get started."
+            ? "Create an account with your email to save your conversations."
             : "Sign in to pick up where you left off."}
         </p>
         <form onSubmit={submit}>
@@ -88,13 +88,13 @@ export function AuthForm({
               type="password"
               autoComplete={register ? "new-password" : "current-password"}
               required
-              minLength={12}
+              minLength={8}
               maxLength={128}
             />
           </label>
           {register && (
             <p className="small muted">
-              At least 12 characters. A memorable phrase works well.
+              At least 8 characters. A memorable phrase works well.
             </p>
           )}
           {error && (
@@ -121,9 +121,10 @@ export function AuthForm({
             {register ? "Sign in" : "Create an account"}
           </Link>
         </p>
+        <p className="small"><Link href="/chat">Continue as guest — no account needed</Link></p>
       </section>
       <p className="auth-note">
-        An independent assistant. Your local models, your conversations.
+        An independent assistant. A little space for big ideas.
       </p>
     </main>
   );

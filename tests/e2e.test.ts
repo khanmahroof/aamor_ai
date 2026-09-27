@@ -130,7 +130,7 @@ test(
         });
       }
       async account(email: string) {
-        const password = "test-only-long-passphrase";
+        const password = "eight123";
         assert.equal(
           (
             await this.json("/api/register", {
@@ -156,6 +156,8 @@ test(
         assert.equal(login.status, 200);
         const session = await (await this.request("/api/auth/session")).json();
         assert.ok(session.user?.id, JSON.stringify(session));
+        assert.equal(session.user.email, email);
+        assert.equal((await this.json("/api/register", { name: "Duplicate", email, password })).status, 409);
       }
     }
     const alice = new Client();
@@ -227,7 +229,7 @@ test(
       }
       assert.ok(ready, logs);
       await t.test(
-        "protected APIs and pages reject anonymous access",
+        "private APIs reject anonymous access while the guest page is public",
         async () => {
           assert.equal(
             (await anonymous.request("/api/conversations")).status,
@@ -236,9 +238,31 @@ test(
           assert.equal((await anonymous.request("/api/models")).status, 401);
           assert.equal((await anonymous.request("/api/settings")).status, 401);
           assert.equal((await anonymous.json("/api/chat", {})).status, 401);
-          assert.equal((await anonymous.request("/chat")).status, 307);
+          const page = await anonymous.request("/chat");
+          assert.equal(page.status, 200);
+          assert.match(await page.text(), /Guest chat/);
+          assert.equal((await anonymous.request("/settings")).status, 307);
         },
       );
+      await t.test("guests stream without accounts, cannot access private data, and respect origin and usage limits", async () => {
+        const models = await (await anonymous.request("/api/guest/models")).json();
+        assert.equal(models.models[0].provider, "ollama");
+        const input = { model: "ollama/test-model", messages: [{ role: "user", content: "Hello as a guest" }] };
+        assert.equal((await anonymous.request("/api/guest/chat", { method: "POST", headers: { Origin: "https://untrusted.test", "Content-Type": "application/json" }, body: JSON.stringify(input) })).status, 403);
+        assert.equal((await anonymous.json("/api/guest/chat", { ...input, conversationId: "private" })).status, 400);
+        const guestEvents = await events(await anonymous.json("/api/guest/chat", input));
+        assert.ok(guestEvents.some((event) => event.type === "text"));
+        assert.ok(guestEvents.some((event) => event.type === "done"));
+        assert.equal((await anonymous.request("/api/conversations")).status, 401);
+        const failure = await events(await anonymous.json("/api/guest/chat", { ...input, messages: [{ role: "user", content: "PROVIDER_ERROR" }] }));
+        assert.ok(failure.some((event) => event.type === "error"));
+        assert.ok(!JSON.stringify(failure).includes("private provider detail"));
+        // Invalid attempts also consume the global abuse budget.
+        for (let i = 0; i < 7; i++) await anonymous.json("/api/guest/chat", {});
+        const limited = await anonymous.json("/api/guest/chat", input);
+        assert.equal(limited.status, 429);
+        assert.ok(limited.headers.get("retry-after"));
+      });
       await alice.account("alice@example.test");
       await bob.account("bob@example.test");
       await t.test(

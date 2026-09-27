@@ -75,6 +75,43 @@ is a separate task. Keep backups and do not rely on a free ephemeral disk for la
 Mocked tests do not call Groq or require a real key. Live Render deployment and
 actual Groq chat must be verified separately after the commit deploys.
 
+### Guest access and accounts
+
+`/chat` opens a text-only guest chat without sign-in. Guest messages stay in page
+memory and disappear on refresh/navigation; they are sent to the selected AI provider
+but are not written to Aamor's database. Sign-in unlocks saved conversations,
+attachments, preferences, and usage history. Private APIs still require an authenticated
+account; public guest routes cannot accept conversation IDs, uploads, or system roles.
+
+Guest generation has shared single-process limits of 10 requests/minute, 100/hour,
+two simultaneous responses, a 60-second timeout, and at most 1,024 output tokens.
+These are trial-wide limits, reset when the process restarts, and are not a billing cap.
+Use a shared atomic limiter before scaling to multiple instances, and configure provider
+spending limits for a broad public launch.
+
+Registration requires an email and a password of 8–128 characters. Emails are normalized
+and stored uniquely in the backend database; passwords are salted and hashed, never
+stored as plaintext. Registration does not yet verify email ownership. Database durability
+depends on the hosting storage configuration described below.
+
+### Durable SQLite on Render (requires paid storage)
+
+The free Render filesystem does **not** preserve registered accounts, chats or uploads
+across redeploys. A minimal durable setup keeps the existing schema and uses a persistent
+disk mounted at `/var/data` on one paid service instance:
+
+- `DATABASE_URL=file:/var/data/aamor.db`
+- `UPLOAD_DIR=/var/data/uploads`
+- Build: `npm ci && npm run build`
+- Start: `npm run db:deploy && npm start`
+
+Run migrations at startup: Render disks are unavailable during the build/pre-deploy
+steps. Back up the existing database and uploads before switching their paths; setting
+these variables alone does not migrate existing data or provision a disk. Keep regular
+SQLite-aware backups outside the service and test restores. Do not commit database files.
+An external database is another option but requires a provisioned database and a compatible
+driver/migration setup. No paid resources are created by this repository.
+
 ### Production process
 
 ```powershell

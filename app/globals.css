@@ -1170,3 +1170,15 @@ kbd {
     flex-direction: column;
   }
 }
+.guest-shell { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+.guest-topbar { flex-shrink: 0; gap: 16px; justify-content: space-between; }
+.guest-links, .guest-controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.guest-links { font-size: 13px; }
+.guest-controls { padding: 16px 24px 0; }
+.guest-controls .model-picker { min-width: 0; max-width: 100%; }
+.guest-controls select { max-width: 100%; }
+.guest-note { padding: 0 24px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.guest-note a { text-decoration: underline; }
+.guest-welcome { max-width: 810px; margin: 60px auto; padding: 24px; }
+.guest-welcome h1 { font-size: clamp(28px, 5vw, 44px); }
+.guest-shell .chat-feed { min-height: 0; }
