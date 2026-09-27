@@ -1,5 +1,5 @@
 import { BaseProvider, providerFetch } from "./base";
-import { sseData } from "../streams";
+import { chatCompletionEvents, chatMessages } from "./openai-stream";
 import type { AIEvent, GenerateInput, Model } from "../types";
 import { AppError } from "../../http";
 export class OpenAIProvider extends BaseProvider {
@@ -37,60 +37,12 @@ export class OpenAIProvider extends BaseProvider {
           ...(/^gpt-4/.test(input.model.name)
             ? { temperature: input.temperature }
             : {}),
-          messages: input.messages.map((m) => ({
-            role: m.role,
-            content: m.images?.length
-              ? [
-                  { type: "text", text: m.content },
-                  ...m.images.map((image) => ({
-                    type: "image_url",
-                    image_url: {
-                      url: `data:${image.mime};base64,${image.base64}`,
-                    },
-                  })),
-                ]
-              : m.content,
-          })),
+          messages: chatMessages(input.messages),
         }),
       },
     );
     if (!response.body)
       throw new AppError(502, "The provider returned no stream.");
-    let done = false;
-    for await (const raw of sseData(response.body)) {
-      if (raw === "[DONE]") {
-        done = true;
-        yield { type: "done" };
-        break;
-      }
-      const data = JSON.parse(raw) as {
-        error?: unknown;
-        choices?: { delta?: { content?: string; refusal?: string } }[];
-        usage?: {
-          prompt_tokens: number;
-          completion_tokens: number;
-          total_tokens: number;
-        };
-      };
-      if (data.error)
-        throw new AppError(
-          502,
-          "The provider could not complete this response.",
-        );
-      const text =
-        data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.delta?.refusal;
-      if (text) yield { type: "text", text };
-      if (data.usage)
-        yield {
-          type: "usage",
-          usage: {
-            inputTokens: data.usage.prompt_tokens,
-            outputTokens: data.usage.completion_tokens,
-            totalTokens: data.usage.total_tokens,
-            estimated: false,
-          },
-        };
-    }
-    if (!done) throw new AppError(502, "The provider stream was interrupted.");
+    yield* chatCompletionEvents(response.body, "OpenAI", input.signal);
   }
 }

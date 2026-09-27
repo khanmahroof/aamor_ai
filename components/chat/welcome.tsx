@@ -5,12 +5,14 @@ export function Welcome({
   onDraft,
   loading,
   hasModels,
+  defaultProvider,
   onRefresh,
 }: {
   name: string;
   onDraft: (text: string) => void;
   loading: boolean;
   hasModels: boolean;
+  defaultProvider: string;
   onRefresh: () => void;
 }) {
   return (
@@ -63,20 +65,34 @@ export function Welcome({
       </div>
       {!loading && !hasModels && (
         <div className="setup-callout">
-          <strong>Connect a local model</strong>
-          <p>
-            Start Ollama and download a model to begin. No paid API key is
-            required.
-          </p>
-          <a
-            className="text-button"
-            href="https://ollama.com/download"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Install Ollama
-          </a>
-          <code>ollama pull llama3.2:3b</code>
+          {defaultProvider === "ollama" ? (
+            <>
+              <strong>Connect a local model</strong>
+              <p>
+                Start Ollama and download a model to begin. No paid API key is
+                required.
+              </p>
+              <a
+                className="text-button"
+                href="https://ollama.com/download"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Install Ollama
+              </a>
+              <code>ollama pull llama3.2:3b</code>
+            </>
+          ) : (
+            <>
+              <strong>No cloud models available</strong>
+              <p>
+                The server could not load its configured{" "}
+                {defaultProvider === "groq" ? "Groq" : defaultProvider} models.
+                Ask the app owner to check the provider configuration, then
+                refresh.
+              </p>
+            </>
+          )}
           <button className="text-button" onClick={onRefresh}>
             Refresh models
           </button>

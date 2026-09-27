@@ -96,6 +96,9 @@ export function SettingsForm({ initial }: { initial: SettingsInput }) {
               }}
             >
               <option value="ollama">Ollama · local</option>
+              {models.some((m) => m.provider === "groq") && (
+                <option value="groq">Groq · cloud</option>
+              )}
               {models.some((m) => m.provider === "openai") && (
                 <option value="openai">OpenAI · cloud</option>
               )}

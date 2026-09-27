@@ -1,3 +1,4 @@
+import { defaultProvider } from "@/lib/ai/config";
 import { checkOrigin, readJson, errorResponse, AppError } from "@/lib/http";
 import { registerSchema } from "@/lib/validation/auth";
 import { hashPassword } from "@/lib/auth/password";
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
           name: input.name,
           email: input.email,
           passwordHash,
-          settings: { create: {} },
+          settings: { create: { preferredProvider: defaultProvider() } },
         },
       });
     } catch (error) {

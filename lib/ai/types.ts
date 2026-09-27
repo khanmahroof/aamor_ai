@@ -1,10 +1,11 @@
-export type ProviderId = "ollama" | "openai" | "anthropic";
+export type ProviderId = "ollama" | "openai" | "anthropic" | "groq";
 export type Model = {
   id: string;
   name: string;
   provider: ProviderId;
   vision: boolean;
   contextWindow: number;
+  maxOutputTokens?: number;
 };
 export type AIMessage = {
   role: "user" | "assistant" | "system";

@@ -79,6 +79,7 @@ export async function generateChat(
     const maxTokens = Math.min(
       envNumber("MAX_OUTPUT_TOKENS", 2048, 128, 8192),
       Math.floor(model.contextWindow / 3),
+      model.maxOutputTokens ?? Infinity,
     );
     const currentMessage = await withAttachments(content, files, model.vision);
     // Retain only recent images within a conservative image budget.

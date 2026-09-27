@@ -30,7 +30,7 @@ export async function providerFetch(url: string, init: RequestInit) {
     if (init.signal?.aborted) throw error;
     throw new AppError(
       503,
-      "Model provider is unavailable. Check the connection or start Ollama.",
+      "Model provider is unavailable. Check the server configuration and connection.",
     );
   }
   if (!response.ok) {

@@ -1,3 +1,4 @@
+import { defaultProvider } from "@/lib/ai/config";
 import "server-only";
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -84,7 +85,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           emailVerified: new Date(),
-          settings: { create: {} },
+          settings: { create: { preferredProvider: defaultProvider() } },
           accounts: {
             create: {
               provider: "google",

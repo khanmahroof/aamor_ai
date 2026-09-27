@@ -1,3 +1,4 @@
+import { defaultProvider } from "@/lib/ai/config";
 import { requirePageUser } from "@/lib/auth/session";
 import { getDatabase } from "@/lib/db/client";
 import { SettingsForm } from "@/components/settings-form";
@@ -7,7 +8,7 @@ export default async function Settings() {
   const user = await requirePageUser();
   const saved = await getDatabase().userSettings.upsert({
     where: { userId: user.id },
-    create: { userId: user.id },
+    create: { userId: user.id, preferredProvider: defaultProvider() },
     update: {},
   });
   const initial = settingsSchema.parse({

@@ -11,6 +11,7 @@ import { AttachButton, AttachmentList } from "./attachments";
 import { useChatController } from "./use-chat-controller";
 export function ChatClient({ name }: { name: string }) {
   const {
+    defaultProvider,
     sidebar,
     setSidebar,
     collapsed,
@@ -207,6 +208,7 @@ export function ChatClient({ name }: { name: string }) {
               onDraft={setDraft}
               loading={loading}
               hasModels={models.length > 0}
+              defaultProvider={defaultProvider}
               onRefresh={refreshModels}
             />
           ) : (

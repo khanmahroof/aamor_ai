@@ -93,6 +93,8 @@ test(
       GOOGLE_CLIENT_ID: "",
       GOOGLE_CLIENT_SECRET: "",
       UPLOAD_DIR: join(directory, "uploads"),
+      GROQ_API_KEY: "",
+      AI_DEFAULT_PROVIDER: "ollama",
       CHAT_RATE_LIMIT: "50",
       CHAT_TIMEOUT_MS: "5000",
       NEXT_TELEMETRY_DISABLED: "1",

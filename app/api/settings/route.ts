@@ -1,3 +1,4 @@
+import { defaultProvider } from "@/lib/ai/config";
 import { requireUser } from "@/lib/auth/session";
 import { getDatabase } from "@/lib/db/client";
 import { checkOrigin, errorResponse, readJson } from "@/lib/http";
@@ -8,7 +9,7 @@ export async function GET() {
     return Response.json(
       await getDatabase().userSettings.upsert({
         where: { userId: user.id },
-        create: { userId: user.id },
+        create: { userId: user.id, preferredProvider: defaultProvider() },
         update: {},
       }),
     );
@@ -24,7 +25,11 @@ export async function PATCH(request: Request) {
     return Response.json(
       await getDatabase().userSettings.upsert({
         where: { userId: user.id },
-        create: { userId: user.id, ...data },
+        create: {
+          userId: user.id,
+          preferredProvider: defaultProvider(),
+          ...data,
+        },
         update: data,
       }),
     );

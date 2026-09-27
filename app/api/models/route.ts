@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
+import { defaultProvider } from "@/lib/ai/config";
 import { listModels } from "@/lib/ai/registry";
 import { errorResponse } from "@/lib/http";
 import { limiter } from "@/lib/rate-limit";
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     return Response.json({
       models,
       warnings,
-      defaultProvider: process.env.AI_DEFAULT_PROVIDER || "ollama",
+      defaultProvider: defaultProvider(),
     });
   } catch (error) {
     return errorResponse(error);

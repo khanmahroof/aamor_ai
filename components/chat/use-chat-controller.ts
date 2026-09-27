@@ -9,13 +9,15 @@ import {
 import type { SettingsInput } from "@/lib/validation/settings";
 import { api } from "@/lib/client-api";
 import { sseData } from "@/lib/ai/streams";
-import type { Model, Usage } from "@/lib/ai/types";
+import { selectModel } from "@/lib/ai/select-model";
+import type { Model, Usage, ProviderId } from "@/lib/ai/types";
 import type {
   ConversationView,
   MessageView,
   AttachmentView,
 } from "@/lib/ui-types";
 export function useChatController() {
+  const [defaultProvider, setDefaultProvider] = useState<ProviderId>("ollama");
   const [models, setModels] = useState<Model[]>([]);
   const [model, setModel] = useState("");
   const [conversation, setConversation] = useState<ConversationView | null>(
@@ -171,23 +173,22 @@ export function useChatController() {
   const refreshModels = useCallback(async () => {
     try {
       const [data, preferences] = await Promise.all([
-        api<{ models: Model[]; warnings: string[]; defaultProvider: string }>(
-          "/api/models?refresh=1",
-        ),
+        api<{
+          models: Model[];
+          warnings: string[];
+          defaultProvider: ProviderId;
+        }>("/api/models?refresh=1"),
         api<SettingsInput>("/api/settings"),
       ]);
       setModels(data.models);
+      setDefaultProvider(data.defaultProvider);
       setModel((previous) =>
-        data.models.some((m) => m.id === previous)
-          ? previous
-          : data.models.find((m) => m.id === preferences.preferredModel)?.id ||
-            data.models.find(
-              (m) =>
-                m.provider ===
-                (preferences.preferredProvider || data.defaultProvider),
-            )?.id ||
-            data.models[0]?.id ||
-            "",
+        selectModel(
+          data.models,
+          previous,
+          preferences.preferredModel,
+          data.defaultProvider,
+        ),
       );
       const isDark =
         preferences.theme === "dark" ||
@@ -405,10 +406,14 @@ export function useChatController() {
   }
   function scrollToLatest() {
     follow.current = true;
-    feed.current?.scrollTo({ top: feed.current.scrollHeight, behavior: "smooth" });
+    feed.current?.scrollTo({
+      top: feed.current.scrollHeight,
+      behavior: "smooth",
+    });
   }
   const selected = models.find((m) => m.id === model);
   return {
+    defaultProvider,
     sidebar,
     setSidebar,
     collapsed,

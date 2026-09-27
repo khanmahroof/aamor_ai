@@ -29,7 +29,7 @@ const env = {
   DATABASE_URL: `file:${database.replaceAll('\\', '/')}`,
   UPLOAD_DIR: resolve(dir, 'uploads'),
   AUTH_SECRET: (await readFile(secretPath, 'utf8')).trim(),
-  OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: '',
+  GROQ_API_KEY: '', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: '', GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: '',
   AI_DEFAULT_PROVIDER: 'ollama', OLLAMA_BASE_URL: 'http://127.0.0.1:11434',
   CHAT_RATE_LIMIT: '10', CHAT_CONCURRENT_LIMIT: '1', MAX_UPLOAD_SIZE_MB: '5',
   MAX_OUTPUT_TOKENS: '1024', NEXT_TELEMETRY_DISABLED: '1',

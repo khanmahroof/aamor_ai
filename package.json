@@ -17,7 +17,7 @@
     "db:studio": "prisma studio",
     "db:prepare": "tsx scripts/prepare-database.ts",
     "setup": "tsx scripts/setup.ts && npm run db:deploy && npm run db:generate",
-    "test": "node --conditions=react-server --import tsx --test tests/auth.test.ts tests/chat.test.ts tests/database.test.ts tests/files.test.ts tests/providers.test.ts",
+    "test": "node --conditions=react-server --import tsx --test tests/auth.test.ts tests/chat.test.ts tests/database.test.ts tests/files.test.ts tests/providers.test.ts tests/groq.test.ts",
     "test:e2e": "node --import tsx --test tests/e2e.test.ts"
   },
   "dependencies": {
